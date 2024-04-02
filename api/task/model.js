@@ -1,31 +1,22 @@
 // build your `Task` model here
 const db = require('../../data/dbConfig')
 
-const get = async () => {
-  const tasks = await db('tasks as t')
-    .leftJoin('projects as p', 't.project_id', 'p.project_id')
-    .select('t.*', 'p.project_name', 'p.project_description')
-  
-  tasks.map(task => {
-    if(task.task_completed === 0) {
-      task.task_completed = false
-    } else {
-      task.task_completed = true
-    }
-    return task
-  })
-  return tasks
+async function findTask() {
+    const tasks = await db('tasks')
+        .join('projects', 'projects.project_id', 'tasks.project_id')
+        .select('tasks.task_id', 'tasks.task_description', 'tasks.task_notes', 'tasks.task_completed', 'projects.project_name', 'projects.project_description')
+    return tasks.map(task => task.task_completed === 0 ? {...task, task_completed: false} : { ...task, task_completed: true})
 }
 
-const add = async newTask => {
-  const [task_id] = await db('tasks').insert(newTask)
-  const created = await db('tasks').where('task_id', task_id).first()
-  if(created.task_completed === 0) {
-    created.task_completed = false
-  } else {
-    created.task_completed = true
-  }
-  return created
+async function addTask(task) {
+    const task_id = await db('tasks').insert(task)
+    const newTask = await db('tasks').where('task_id', task_id).first()
+    return newTask.task_completed === 0
+    ?{...newTask, task_completed: false}
+    :{...newTask, task_completed: true}
 }
 
-module.exports = { get, add }
+module.exports = {
+    findTask,
+    addTask
+}
