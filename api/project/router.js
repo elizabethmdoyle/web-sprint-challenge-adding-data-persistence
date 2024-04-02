@@ -1,20 +1,39 @@
 // build your `/api/projects` router here
-const router = require("express").Router();
-const Project = require('./model');
+const express = require('express')
+const router = express.Router()
+const Project = require('./model')
 
-router.get("/:project_id", (req, res, next) => {
-  Project.getProjectById(req.params.project_id)
-    .then((resource) => {
-      res.status(200).json(resource);
-    })
-    .catch(next);
-});
+router.use(express.json())
 
-router.use((err, req, res, next) => { //eslint-disable-line
-  res.status(500).json({
-    customMessage: "something went wrong inside the Project router",
-    message: err.message,
-  });
-});
 
-module.exports = router;    
+router.post('/',async (req,res,next) => {
+    try{
+      const newProduct = await Project.create(req.body)
+      const projectBoolean = {
+        ...newProduct,
+        project_completed: Boolean(newProduct.project_completed)
+      }
+      res.status(201).json(projectBoolean)
+    }catch(err){
+      next(err)
+    }
+})
+
+router.get('/', async (req,res,next) => {
+  try{
+    const projects = await Project.getAll()
+    const projectsWithBooleanCompleted = projects.map(project => ({
+      ...project,
+      project_completed: Boolean(project.project_completed),
+    }));
+
+    res.json(projectsWithBooleanCompleted)
+  }catch(err){
+    next(err)
+  }
+})
+
+
+
+
+module.exports = router
