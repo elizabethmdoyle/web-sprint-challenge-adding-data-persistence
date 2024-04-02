@@ -1,37 +1,29 @@
 // build your `/api/tasks` router here
-
-const express = require('express')
-const router = express.Router()
+const router = require('express').Router()
 const Task = require('./model')
 
-router.use(express.json())
-
-router.post('/',async (req,res,next) => {
-    try{const newTask = await Task.create(req.body)
-        const booleanTask = {
-            ...newTask,
-            task_completed: Boolean(newTask.task_completed)
-        }
-    res.json(booleanTask)
-    } catch(err){
-        next(err)
-    }
+router.get('/', (req, res, next) => {
+  Task.get()
+    .then(tasks => {
+      res.json(tasks)
+    })
+    .catch(next)
 })
 
+router.post('/', (req, res, next) => {
+  Task.add(req.body)
+    .then(created => {
+      res.status(201).json(created)
+    })
+    .catch(next)
+})
 
-router.get('/', async (req,res,next) => {
-    try{
-        const tasks = await Task.getAll()
-        const tasksWithBooleanCompleted = tasks.map(task => ({
-            ...task,
-            task_notes: task.task_notes,
-            task_description: task.task_description,
-            task_completed: Boolean(task.task_completed),
-          }));
-        res.json(tasksWithBooleanCompleted)
-    } catch(err){
-        next(err)
-    }
+router.use((err, req, res, next) => {
+  res.status(err.status || 500).json({
+    customMessage: 'something went wrong in the tasks router',
+    message: err.message,
+    stack: err.stack
+  })
 })
 
 module.exports = router

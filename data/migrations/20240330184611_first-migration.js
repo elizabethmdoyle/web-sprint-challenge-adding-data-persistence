@@ -1,47 +1,52 @@
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
 exports.up = async function(knex) {
   await knex.schema
-        .createTable('projects',table => {
-            table.increments('project_id')
-            table.string('project_name',200).notNullable()
-            table.string('project_description',200)
-            table.boolean('project_completed')
-            
-        })
-        .createTable('resources',table => {
-            table.increments('resource_id')
-            table.string('resource_name').notNullable().unique()
-            table.string('resource_description')
-        })
-        .createTable('tasks',table => {
-            table.increments('task_id')
-            table.string('task_description').notNullable()
-            table.string('task_notes')
-            table.integer('task_completed').defaultTo(0)
-            table.integer('project_id')
-            .notNullable()
-            .references('project_id')
-            .inTable('projects')
-            .onDelete('CASCADE')
-            .onUpdate('CASCADE')
-        })
-        .createTable('project_resources',table => {
-            table.increments('assignment_id')
-            
-        })
+    .createTable('projects', tbl => {
+      tbl.increments('project_id')
+      tbl.string('project_name', 128).notNullable()
+      tbl.string('project_description')
+      tbl.integer('project_completed').defaultTo(0)
+    })
+    .createTable('resources', tbl => {
+      tbl.increments('resource_id')
+      tbl.string('resource_name', 128).notNullable().unique()
+      tbl.string('resource_description')
+    })
+    .createTable('tasks', tbl => {
+      tbl.increments('task_id')
+      tbl.string('task_description', 256).notNullable()
+      tbl.string('task_notes')
+      tbl.integer('task_completed').defaultTo(0)
+      tbl.integer('project_id')
+        .notNullable()
+        .unsigned()
+        .references('project_id')
+        .inTable('projects')
+        .onUpdate('CASCADE')
+        .onDelete('RESTRICT')
+    })
+    .createTable('project_resources', tbl => {
+      tbl.increments('project_resource_id')
+      tbl.integer('project_id')
+        .notNullable()
+        .unsigned()
+        .references('project_id')
+        .inTable('projects')
+        .onUpdate('CASCADE')
+        .onDelete('RESTRICT')
+      tbl.integer('resource_id')
+        .notNullable()
+        .unsigned()
+        .references('resource_id')
+        .inTable('resources')
+        .onUpdate('CASCADE')
+        .onDelete('RESTRICT')
+    })
 };
 
-/**
- * @param { import("knex").Knex } knex
- * @returns { Promise<void> }
- */
 exports.down = async function(knex) {
   await knex.schema
-  .dropTableIfExists('project_resources')
-  .dropTableIfExists('tasks')
-  .dropTableIfExists('resources')
-  .dropTableIfExists('projects')
+    .dropTableIfExists('project_resources')
+    .dropTableIfExists('tasks')
+    .dropTableIfExists('resources')
+    .dropTableIfExists('projects')
 };

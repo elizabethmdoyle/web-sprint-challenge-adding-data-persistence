@@ -1,29 +1,32 @@
 // build your server here and require it from index.js
-const express = require('express');
-const helmet = require('helmet');
-const projectRouter = require('../api/project/router');
-const resourceRouter = require('../api/resource/router');
-const taskRouter = require('../api/task/router');
+const express = require('express')
+const helmet = require('helmet')
+const projectRouter = require('./project/router')
+const resourceRouter = require('./resource/router')
+const taskRouter = require('./task/router')
 
-const server = express();
+const logger = (req, res, next) => {
+  const timestamp = new Date().toLocaleString()
+  const method = req.method
+  const url = req.originalUrl
+  console.log(`[${timestamp}] ${method} to ${url}`)
+  next()
+}
 
-server.use(helmet());
-server.use(express.json());
-server.use('/api/project', projectRouter);
-server.use('/api/resource', resourceRouter);
-server.use('/api/task', taskRouter);
+const server = express()
 
+server.use(express.json())
+server.use(helmet())
+server.use(logger)
 
+server.use('/api/projects', projectRouter)
+server.use('/api/resources', resourceRouter)
+server.use('/api/tasks', taskRouter)
 
-server.use('*', (req,res,next)=> {
-  next({status:404,message:'not found'})
-})
-
-server.use((err,req,res, next) => {
-  res.status(err.status || 500).json({
-      message:err.message
+server.use('*', (req, res) => {
+  res.status(404).json({
+    error: 'the resource you are looking for does not exist'
   })
 })
 
-
-module.exports = server;
+module.exports = server
